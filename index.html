@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>API System — Architecture Presentation Integrated System</title>
+<meta name="description" content="API System (Architecture Presentation Integrated System) — 建築プレゼンテーション統合システム">
+<meta name="theme-color" content="#eef3f7">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="styles/landing.css">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body class="loading">
+<canvas id="gl" aria-label="API System 3D" role="img"></canvas>
+
+<header>
+  <div class="brand">
+    <img src="icons/icon-192.png" alt="" width="46" height="46">
+    <div><b>API System</b><small>(Architecture Presentation Integrated System)</small></div>
+  </div>
+  <div class="lang glass" id="lang" role="group" aria-label="Language">
+    <button data-l="ja" class="on" aria-pressed="true">日本語</button><button data-l="en" aria-pressed="false">English</button>
+  </div>
+</header>
+
+<div id="labels" aria-hidden="true"></div>
+
+<nav id="legend" class="glass" aria-label="Data elements"><h3 id="lg-t"></h3><ul id="lg-l"></ul></nav>
+
+<aside id="info" class="glass" aria-live="polite">
+  <button id="info-x" class="ghost" aria-label="close">×</button>
+  <div class="dot" id="i-dot"></div>
+  <h2 id="i-t"></h2><p class="sub" id="i-s"></p>
+  <h4 id="i-rh"></h4><p id="i-r" class="note"></p>
+  <h4 id="i-oh"></h4><code id="i-o"></code>
+  <h4 id="i-lh"></h4><div id="i-l" class="chips"></div>
+  <p class="note small" id="i-c"></p>
+  <span class="stage-chip" id="i-st"></span>
+</aside>
+
+<div id="hint" class="glass"><span id="hint-t"></span></div>
+<div id="tag" class="glass"><span id="tag-t"></span></div>
+
+<!-- [[API_SYSTEM:EDITOR_OPENING]] overlay animasi opening singkat -->
+<div id="opening" aria-hidden="true">
+  <div class="glass op-card"><h2 id="op-t"></h2><div class="bar"><i id="op-b"></i></div><p id="op-m" class="note"></p></div>
+</div>
+<div id="flash"></div>
+
+<!-- [[API_SYSTEM:EDITOR_MOUNT]] editor akan dipasang di sini (lihat src/config.js) -->
+<section id="editor" aria-hidden="true">
+  <div class="glass ed-card">
+    <h2 id="ed-t"></h2><p class="note" id="ed-p"></p>
+    <div id="editor-mount" data-ai-marker="API_SYSTEM:EDITOR_MOUNT"><code>[[API_SYSTEM:EDITOR_MOUNT]]</code></div>
+    <button id="ed-back" class="primary"></button>
+  </div>
+</section>
+
+<div id="fallback"><div class="glass"><h2>WebGL2</h2><p id="fb-t"></p></div></div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
