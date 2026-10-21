@@ -46,12 +46,12 @@ EDGES.forEach(([a, b]) => {
   nodes.forEach(n => { n.ux = Math.cos(n.ang) * RAD[n.ring]; n.uy = Math.sin(n.ang) * RAD[n.ring]; });
 })();
 
-/* jalur aliran cahaya: tiap bubble menuju bubble relasi di cincin lebih dalam, hingga pusat */
+/* pohon koneksi sederhana: tiap bubble terhubung ke bubble TERDEKAT di cincin satu tingkat lebih dalam (cincin terdalam → pusat).
+   Hubungan relasi lengkap tetap muncul saat hover; tampilan awal hanya garis radial yang rapi. */
 nodes.forEach(n => {
   n.ph = (n.i * .6180339) % 1; if (n.ring === 0) return;
-  const c = n.nbr.filter(m => m.ring < n.ring); if (!c.length) return;
-  const mr = Math.max(...c.map(m => m.ring)), d = m => Math.hypot(m.ux - n.ux, m.uy - n.uy);
-  n.parent = c.filter(m => m.ring === mr).sort((a, b) => d(a) - d(b))[0];
+  const c = nodes.filter(m => m.ring === n.ring - 1), d = m => Math.hypot(m.ux - n.ux, m.uy - n.uy);
+  n.parent = c.sort((a, b) => d(a) - d(b))[0];
 });
 
 /* ---------------- teks di dalam bubble ---------------- */
@@ -194,11 +194,11 @@ function stepFx(dt) {
 }
 const seg = (a, b, p) => { ctx.moveTo(a.x, a.y); ctx.lineTo(a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p); };
 const CEN = { x: 0, y: 0 };
-function glow(x, y, a) {
-  ctx.globalAlpha = a * .16; ctx.fillStyle = '#f0732a'; ctx.beginPath(); ctx.arc(x, y, 11, 0, TAU); ctx.fill();
-  ctx.globalAlpha = a * .4; ctx.beginPath(); ctx.arc(x, y, 6.5, 0, TAU); ctx.fill();
-  ctx.globalAlpha = a; ctx.fillStyle = '#ffb347'; ctx.beginPath(); ctx.arc(x, y, 3.2, 0, TAU); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.globalAlpha = a * .9; ctx.beginPath(); ctx.arc(x, y, 1.4, 0, TAU); ctx.fill();
+function glow(x, y, a) {                                   /* titik cahaya biru, kecil */
+  ctx.fillStyle = '#2f8cff'; ctx.globalAlpha = a * .14; ctx.beginPath(); ctx.arc(x, y, 7, 0, TAU); ctx.fill();
+  ctx.globalAlpha = a * .38; ctx.beginPath(); ctx.arc(x, y, 4, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#7cc4ff'; ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(x, y, 2.1, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.globalAlpha = a * .95; ctx.beginPath(); ctx.arc(x, y, .9, 0, TAU); ctx.fill();
 }
 function draw(now) {
   place(now); CEN.x = S.cx; CEN.y = S.cy;
@@ -208,13 +208,12 @@ function draw(now) {
   let dim = 0; nodes.forEach(n => { n.hl = 0; dim = Math.max(dim, e3(n.p)); });
   nodes.forEach(f => { if (f.p > 0) { const v = e3(f.p); f.hl = Math.max(f.hl, v); f.nbr.forEach(m => { m.hl = Math.max(m.hl, v); }); } });
 
-  /* (A) pohon aliran menuju pusat — muncul saat pusat di-hover */
-  if (ch > .001) {
-    ctx.globalAlpha = fade * ch * .5; ctx.lineWidth = 1.6; ctx.strokeStyle = COLOR; ctx.beginPath();
-    nodes.forEach(n => { if (n.parent) seg(n, n.parent, 1); }); ctx.stroke();
-    ctx.strokeStyle = LINE_C; ctx.lineWidth = 2; ctx.setLineDash([7, 6]); ctx.beginPath();
-    nodes.forEach(n => { if (!n.parent) seg(n, CEN, 1); }); ctx.stroke(); ctx.setLineDash([]);
-  }
+  /* (A) pohon koneksi sederhana: tiap bubble → 1 bubble induk di cincin lebih dalam → pusat (selalu tampak tipis) */
+  { const base = (.38 + ch * .3) * (1 - .65 * dim);
+    ctx.globalAlpha = fade * base; ctx.lineWidth = 1.2; ctx.strokeStyle = COLOR; ctx.beginPath();
+    nodes.forEach(n => { if (n.parent && n.ap > .05) seg(n, n.parent, n.ap); }); ctx.stroke();
+    ctx.globalAlpha = fade * base * .9; ctx.strokeStyle = LINE_C; ctx.lineWidth = 1.2 + ch * .8; ctx.setLineDash([6, 6]); ctx.beginPath();
+    nodes.forEach(n => { if (!n.parent && n.ap > .05) seg(n, CEN, n.ap); }); ctx.stroke(); ctx.setLineDash([]); }
   /* (B) konektor bubble yang di-hover/dipilih: relasi (teal) + garis ke pusat (oranye putus-putus, lebih tebal) */
   nodes.forEach(n => {
     if (n.p <= .001) return; const e = e3(n.p);
@@ -244,7 +243,7 @@ function draw(now) {
 
   /* (C) titik cahaya: bergerak dari bubble terluar, lewat garis relasi antar bubble, menuju pusat */
   if (ch > .001 && !reduce) {
-    const tt = now / 1000, V = Math.max(170, S.W * .15);
+    const tt = now / 1000, V = Math.max(85, S.W * .07);
     nodes.forEach(n => {
       const pts = [n]; for (let m = n.parent; m; m = m.parent) pts.push(m);
       { const q = pts[pts.length - 1], dx = S.cx - q.x, dy = S.cy - q.y, dd = Math.hypot(dx, dy) || 1, k2 = Math.max(0, (dd - rc) / dd); pts.push({ x: q.x + dx * k2, y: q.y + dy * k2 }); }   /* berhenti di tepi bubble pusat */

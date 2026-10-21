@@ -29,7 +29,7 @@ Bubble datar satu warna (`COLOR` di `main.js`), teks di dalam bubble, tanpa ikon
 
 ## Perilaku
 - Klik bubble tengah → opening ~3 dtk (zoom, gelombang cincin, grid partikel) → editor/hook.
-- Hover bubble → konektor tumbuh 1 detik: garis relasi (teal) + garis ke pusat (oranye putus-putus, lebih tebal). Garis disembunyikan saat tidak ada hover.
-- Hover pusat → titik cahaya mengalir dari bubble luar lewat garis relasi menuju pusat.
+- Hover bubble → konektor tumbuh 1 detik: garis relasi (teal) + garis ke pusat (oranye putus-putus, lebih tebal). Tampilan awal hanya menampilkan pohon koneksi sederhana (tiap bubble → bubble terdekat di cincin dalam → pusat, garis tipis); relasi lengkap baru muncul saat hover.
+- Hover pusat → titik cahaya biru kecil mengalir pelan dari bubble luar lewat garis relasi menuju pusat.
 - Klik bubble kecil → kamera memutar bubble ke kiri + panel keterangan (peran, field output, tautan, tahap).
 - Drag = putar, wheel = zoom, `Esc` = tutup panel/kembali. Bahasa disimpan di `localStorage` (`apisys-lang`).
