@@ -7,7 +7,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const ease = t => 1 - Math.pow(1 - t, 3);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FONT = '"Hiragino Sans","Yu Gothic UI","Segoe UI Variable","Segoe UI",Meiryo,system-ui,sans-serif';
-const COLOR = '#0fa3a3', COLOR_DARK = '#0b7f7f', LINE_C = '#f0732a', TAU = Math.PI * 2;
+const COLOR = '#0fa3a3', COLOR_DARK = '#0b7f7f', TAU = Math.PI * 2;
 
 let lang = 'ja';
 try { lang = localStorage.getItem('apisys-lang') || 'ja'; } catch (e) { /* ignore */ }
@@ -208,18 +208,14 @@ function draw(now) {
   let dim = 0; nodes.forEach(n => { n.hl = 0; dim = Math.max(dim, e3(n.p)); });
   nodes.forEach(f => { if (f.p > 0) { const v = e3(f.p); f.hl = Math.max(f.hl, v); f.nbr.forEach(m => { m.hl = Math.max(m.hl, v); }); } });
 
-  /* (A) pohon koneksi sederhana: tiap bubble → 1 bubble induk di cincin lebih dalam → pusat (selalu tampak tipis) */
-  { const base = (.38 + ch * .3) * (1 - .65 * dim);
-    ctx.globalAlpha = fade * base; ctx.lineWidth = 1.2; ctx.strokeStyle = COLOR; ctx.beginPath();
-    nodes.forEach(n => { if (n.parent && n.ap > .05) seg(n, n.parent, n.ap); }); ctx.stroke();
-    ctx.globalAlpha = fade * base * .9; ctx.strokeStyle = LINE_C; ctx.lineWidth = 1.2 + ch * .8; ctx.setLineDash([6, 6]); ctx.beginPath();
-    nodes.forEach(n => { if (!n.parent && n.ap > .05) seg(n, CEN, n.ap); }); ctx.stroke(); ctx.setLineDash([]); }
-  /* (B) konektor bubble yang di-hover/dipilih: relasi (teal) + garis ke pusat (oranye putus-putus, lebih tebal) */
+  /* (A) pohon koneksi sederhana: tiap bubble → bubble terdekat di cincin lebih dalam → pusat. Satu warna, garis tipis solid. */
+  ctx.globalAlpha = fade * (.38 + ch * .3) * (1 - .65 * dim); ctx.lineWidth = 1.2; ctx.strokeStyle = COLOR; ctx.beginPath();
+  nodes.forEach(n => { if (n.ap > .05) seg(n, n.parent || CEN, n.ap); }); ctx.stroke();
+  /* (B) hover/dipilih: garis relasi + garis ke pusat tumbuh 1 detik, warna sama tapi lebih tebal */
   nodes.forEach(n => {
     if (n.p <= .001) return; const e = e3(n.p);
-    ctx.globalAlpha = fade * clamp(n.p * 4, 0, 1); ctx.strokeStyle = 'rgba(15,163,163,.9)'; ctx.lineWidth = 2; ctx.beginPath();
-    n.nbr.forEach(m => seg(n, m, e)); ctx.stroke();
-    ctx.strokeStyle = LINE_C; ctx.lineWidth = 3; ctx.setLineDash([9, 6]); ctx.beginPath(); seg(n, CEN, e); ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha = fade * clamp(n.p * 4, 0, 1); ctx.strokeStyle = COLOR; ctx.lineWidth = 2.6; ctx.beginPath();
+    n.nbr.forEach(m => seg(n, m, e)); seg(n, CEN, e); ctx.stroke();
   });
 
   /* bubble pusat */
