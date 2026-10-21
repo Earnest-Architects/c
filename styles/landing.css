@@ -5,7 +5,7 @@ body{font-family:"Avenir Next","Segoe UI Variable","Segoe UI","Hiragino Sans","Y
  background:radial-gradient(1200px 700px at 15% 10%,#dff4f1,transparent 60%),radial-gradient(1000px 700px at 90% 90%,#dfe4fb,transparent 60%),#eef3f7;-webkit-tap-highlight-color:transparent}
 #gl{position:fixed;inset:0;width:100%;height:100%;z-index:0;touch-action:none;cursor:grab;display:block}
 #gl.drag{cursor:grabbing}#gl.hover{cursor:pointer}
-.glass{background:rgba(255,255,255,.52);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);border:1px solid rgba(255,255,255,.75);border-radius:22px;box-shadow:0 20px 60px rgba(40,70,110,.12)}
+.glass{background:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.9);border-radius:18px;box-shadow:0 6px 20px rgba(40,70,110,.10)}
 header{position:fixed;inset:0 0 auto 0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:18px 32px;pointer-events:none;transition:opacity 1.2s var(--ease),transform 1.2s var(--ease)}
 header>*{pointer-events:auto}
 .brand{display:flex;align-items:center;gap:14px}
@@ -47,21 +47,20 @@ code{display:inline-block;font:.8rem ui-monospace,Consolas,monospace;background:
 /* opening */
 #opening{position:fixed;inset:0;z-index:8;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity 1.2s var(--ease)}
 #opening.on{opacity:1}
-.op-card{padding:36px 52px;text-align:center;min-width:min(480px,88vw);transform:translateY(30px) scale(.96);filter:blur(8px);transition:transform var(--t2) var(--ease),filter var(--t2) var(--ease)}
-#opening.on .op-card{transform:none;filter:none}
+.op-card{padding:36px 52px;text-align:center;min-width:min(480px,88vw);transform:translateY(30px);transition:transform var(--t2) var(--ease)}
+#opening.on .op-card{transform:none}
 .bar{height:10px;background:rgba(20,32,43,.1);border-radius:9px;overflow:hidden;margin:6px 0 14px}
-.bar i{display:block;height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,var(--acc),var(--acc2));box-shadow:0 0 24px var(--acc)}
+.bar i{display:block;height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,var(--acc),var(--acc2));}
 #flash{position:fixed;inset:0;z-index:9;background:#fff;opacity:0;pointer-events:none;transition:opacity .9s ease}
 #flash.on{opacity:.95}
 /* editor mount */
-#editor{position:fixed;inset:0;z-index:7;display:grid;place-items:center;padding:24px;opacity:0;visibility:hidden;background:rgba(238,243,247,.55);backdrop-filter:blur(10px);transition:opacity var(--t) var(--ease),visibility 0s var(--t)}
+#editor{position:fixed;inset:0;z-index:7;display:grid;place-items:center;padding:24px;opacity:0;visibility:hidden;background:rgba(238,243,247,.92);transition:opacity var(--t) var(--ease),visibility 0s var(--t)}
 #editor.on{opacity:1;visibility:visible;transition-delay:0s}
 .ed-card{width:min(960px,100%);height:min(640px,90vh);padding:28px;display:flex;flex-direction:column;gap:14px;transform:translateY(44px) scale(.96);transition:transform var(--t) var(--ease)}
 #editor.on .ed-card{transform:none}
 #editor-mount{flex:1;border:2px dashed rgba(75,95,232,.45);border-radius:18px;display:grid;place-items:center;overflow:hidden;background:rgba(255,255,255,.35)}
 #editor-mount.has-frame{border:0}#editor-mount iframe{width:100%;height:100%;border:0}
 .ed-card .primary{align-self:flex-end}
-#fallback{position:fixed;inset:0;z-index:20;display:none;place-items:center;padding:24px}#fallback.on{display:grid}#fallback .glass{padding:32px}
 /* load / opening states */
 body.opening header,body.opening #legend,body.opening #hint,body.opening #tag,body.opening #labels,body.opening #info{opacity:0!important;pointer-events:none}
 body.opening header{transform:translateY(-20px)}

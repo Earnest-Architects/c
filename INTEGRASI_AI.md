@@ -1,7 +1,7 @@
 # API System — Landing Page (panduan integrasi untuk AI berikutnya)
 
-Frontend statis (tanpa build, tanpa CDN). three.js r186 (WebGL2) ada di `vendor/`.
-Tema/warna/animasi mengikuti `texture-main` (kaca terang, partikel, transisi panjang).
+Frontend statis (tanpa build, tanpa CDN, tanpa library). Digambar dengan Canvas 2D — ringan.
+Bubble datar satu warna (`COLOR` di `main.js`), teks di dalam bubble, tanpa ikon.
 
 ## Struktur
 | File | Isi |
@@ -10,7 +10,7 @@ Tema/warna/animasi mengikuti `texture-main` (kaca terang, partikel, transisi pan
 | `styles/landing.css` | Tema (variabel `--acc`, `--acc2`, `--t`) |
 | `src/data.js` | **NODES** (34 bubble: data, backend, tool, runtime), **EDGES** (relasi), **I18N** (JA utama / EN) |
 | `src/config.js` | **Hook editor** — tempat mengisi URL builder |
-| `src/main.js` | Scene three.js, interaksi, opening, bahasa |
+| `src/main.js` | Canvas 2D: tata letak cincin, rotasi 2D, interaksi, opening, bahasa |
 
 ## Penanda integrasi (cari `[[API_SYSTEM:`)
 - `[[API_SYSTEM:EDITOR_URL]]` → `src/config.js`, `EDITOR_HOOK.url` (sengaja `null`).
