@@ -197,15 +197,15 @@ export const EDGES = [
 
 export const I18N = {
   ja: {
-    centerMain: '360°ビューア', centerSub: 'APIシステム（建築プレゼン統合）', centerEn: 'API System', centerHint: 'クリックしてエディタを開く',
+    centerMain: 'APIシステム', centerSub: '建築プレゼンテーション統合システム', centerEn: 'Architecture Presentation Integrated System', centerHint: 'クリックしてエディタを開く',
     hint: 'ドラッグで回転 ・ ホイールでズーム ・ カーソルで接続表示 ・ クリックで詳細', legend: 'システム要素', role: '役割', out: '出力先', link: '連携', stage: '段階',
-    toCenter: 'すべての要素が 360°ビューア を完成させます', close: '閉じる', back: '戻る', msgs: ['データバンドルを統合中', '接続を確立中', 'APIシステムを構成中', 'エディタを起動中'],
-    openTitle: 'エディタを起動', mountTitle: 'エディタ接続ポイント', mountText: 'ここにビルダー（エディタ）が接続されます。URL は未設定です。', webgl: 'WebGL2 に対応したブラウザが必要です。', tag: n => `${n}の要素 → 360°ビューア`,
+    toCenter: 'すべての要素が APIシステム を完成させます', close: '閉じる', back: '戻る', msgs: ['データバンドルを統合中', '接続を確立中', 'APIシステムを構成中', 'エディタを起動中'],
+    openTitle: 'エディタを起動', mountTitle: 'エディタ接続ポイント', mountText: 'ここにビルダー（エディタ）が接続されます。URL は未設定です。', webgl: 'WebGL2 に対応したブラウザが必要です。', tag: n => `${n}の要素 → APIシステム`,
   },
   en: {
-    centerMain: '360° Viewer', centerSub: 'API System · Architecture Presentation', centerEn: 'API System', centerHint: 'Click to open the editor',
+    centerMain: 'API System', centerSub: 'Architecture Presentation Integrated System', centerEn: '建築プレゼンテーション統合システム', centerHint: 'Click to open the editor',
     hint: 'Drag to rotate · Scroll to zoom · Hover for connections · Click for details', legend: 'System elements', role: 'Role', out: 'Outputs to', link: 'Linked with', stage: 'Stage',
-    toCenter: 'Every element completes the 360° Viewer', close: 'Close', back: 'Back', msgs: ['Integrating data bundles', 'Establishing connections', 'Assembling the API System', 'Launching the editor'],
-    openTitle: 'Launching editor', mountTitle: 'Editor mount point', mountText: 'The builder (editor) will be attached here. No URL is set yet.', webgl: 'A WebGL2-capable browser is required.', tag: n => `${n} elements → 360° Viewer`,
+    toCenter: 'Every element completes the API System', close: 'Close', back: 'Back', msgs: ['Integrating data bundles', 'Establishing connections', 'Assembling the API System', 'Launching the editor'],
+    openTitle: 'Launching editor', mountTitle: 'Editor mount point', mountText: 'The builder (editor) will be attached here. No URL is set yet.', webgl: 'A WebGL2-capable browser is required.', tag: n => `${n} elements → API System`,
   },
 };

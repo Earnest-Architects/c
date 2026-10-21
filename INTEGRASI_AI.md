@@ -1,6 +1,6 @@
 # API System — Landing Page (panduan integrasi untuk AI berikutnya)
 
-**Konsep:** bubble pusat = **360 Viewer (API System)**. Semua bubble lain (39) adalah bagian yang melengkapi viewer itu, jadi semuanya terhubung ke pusat.
+**Konsep:** bubble pusat = **API System** (branding; secara fungsi adalah 360 Viewer). Semua bubble lain (39) adalah bagian yang melengkapi viewer itu, jadi semuanya terhubung ke pusat.
 
 Frontend statis (tanpa build, tanpa CDN, tanpa library). Digambar dengan Canvas 2D — ringan.
 Bubble datar satu warna (`COLOR` di `main.js`), teks di dalam bubble, tanpa ikon.
