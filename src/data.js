@@ -93,10 +93,6 @@ export const NODES = [
     ja: '自動圧縮', en: 'Auto Compress',
     roleJa: 'アップロードした画像をブラウザ内で自動的に WebP へ圧縮します。表示速度を上げ、ZIP のサイズを小さくします。',
     roleEn: 'Automatically compresses uploaded images to WebP in the browser, speeding up the tour and shrinking the ZIP.' },
-  { id: 'viewer', color: '#1b64e8', size: .78, icon: 'eye', key: 'js/viewer.js · lib/ (Pannellum)', stage: 'Runtime',
-    ja: '360°ビューア', en: '360° Viewer',
-    roleJa: 'Pannellum を使ったメインの 360° 表示エンジン。パノラマの読み込み、シーン切り替え、ホットスポット描画を担当します。',
-    roleEn: 'The main 360° display engine built on Pannellum. It loads panoramas, switches scenes and renders hotspots.' },
   { id: 'pitchfinder', color: '#1fa971', size: .68, icon: 'target', key: 'pitch-finder.html · pitch / yaw', stage: 'Tool',
     ja: 'ピッチファインダー', en: 'Pitch Finder',
     roleJa: '360° 画像の中をクリックして pitch / yaw 座標を調べる専用ツール。結果は pitchPoints のコードとしてコピーできます。',
@@ -143,6 +139,32 @@ export const NODES = [
     ja: 'ファビコン', en: 'Favicon Set',
     roleJa: 'ブラウザのタブやホーム画面で使うアイコン一式。favicon と apple-touch-icon を含みます。',
     roleEn: 'The icon set used in browser tabs and on the home screen, including favicon and apple-touch-icon.' },
+
+  /* ===== Dari README Kajanchi: file & logika yang melengkapi 360 Viewer ===== */
+  { id: 'contentjs', color: '#0fa3a3', size: .9, icon: 'code', key: 'js/content.js · floors / views / contents', stage: 'Core',
+    ja: 'content.js（データ）', en: 'content.js (Data)',
+    roleJa: 'ツアーを編集するための唯一のファイル。フロア・間取りの点・360°画像・ナビ矢印・コンテンツがすべてここにあります。',
+    roleEn: 'The single file you edit. Floors, floorplan points, 360° images, navigation arrows and contents all live here.' },
+  { id: 'state', color: '#0fa3a3', size: .6, icon: 'db', key: 'js/state.js', stage: 'Runtime',
+    ja: 'ステート管理', en: 'State Logic',
+    roleJa: 'ツアー全体で共有される状態を扱う内部ロジック。他のモジュールはここを通して連携します。',
+    roleEn: 'Internal logic that handles the state shared across the tour. The other modules coordinate through it.' },
+  { id: 'hotspotsjs', color: '#0fa3a3', size: .66, icon: 'pin', key: 'js/hotspots.js', stage: 'Runtime',
+    ja: 'ホットスポット描画', en: 'Hotspot Engine',
+    roleJa: 'パノラマ内のナビ矢印とコンテンツ点を生成・表示する内部ロジック。content.js の pitchPoints を読み取ります。',
+    roleEn: 'Internal logic that creates and shows navigation arrows and content points in the panorama, reading pitchPoints from content.js.' },
+  { id: 'stylecss', color: '#0fa3a3', size: .62, icon: 'image', key: 'css/style.css · vr.css · *-finder.css', stage: 'Runtime',
+    ja: 'テーマ CSS', en: 'Theme CSS',
+    roleJa: 'メインツアーの見た目を決める CSS。VR ページと各ファインダーページにはそれぞれ専用の CSS があります。',
+    roleEn: 'The CSS that styles the main tour. The VR page and each finder page have their own dedicated stylesheets.' },
+  { id: 'contenttypes', color: '#0fa3a3', size: .7, icon: 'window', key: 'contents[] · 6 types', stage: 'Runtime',
+    ja: 'コンテンツ 6 タイプ', en: 'Content Types (6)',
+    roleJa: '写真・アイコン＋リンク・テキスト＋リンク・リンクのみ・YouTube 動画・埋め込み（Google Maps など）の 6 種類。',
+    roleEn: 'Six kinds: photo, icon + link, text + link, link only, YouTube video and embed (such as Google Maps).' },
+  { id: 'labels', color: '#0fa3a3', size: .5, icon: 'list', key: 'showLabel: false', stage: 'Runtime',
+    ja: 'ラベル表示', en: 'Point Labels',
+    roleJa: '各ポイントは showLabel: false でテキストなし（アイコンのみ）にできます。ナビ矢印とコンテンツ点の両方に使えます。',
+    roleEn: 'Every point can hide its text with showLabel: false, leaving only the icon. Works for both navigation arrows and content points.' },
 ];
 
 /* hubungan semantik (alur data). Garis tambahan tipis ke tetangga terdekat dibuat otomatis. */
@@ -152,32 +174,38 @@ export const EDGES = [
   ['project', 'social'], ['project', 'notes'], ['social', 'assets'], ['ai', 'hotspots'], ['ai', 'photocg'], ['glb', 'photocg'],
 
   /* backend notes */
-  ['worker', 'd1'], ['worker', 'notesapi'], ['notesapi', 'd1'], ['notesapi', 'notes'], ['notes', 'noteslist'], ['d1', 'noteslist'], ['noteslist', 'viewer'], ['projectid', 'worker'], ['projectid', 'qrshare'],
+  ['worker', 'd1'], ['worker', 'notesapi'], ['notesapi', 'd1'], ['notesapi', 'notes'], ['notes', 'noteslist'], ['d1', 'noteslist'], ['projectid', 'worker'], ['projectid', 'qrshare'],
   /* kompres & ekspor */
   ['compress', 'assets'], ['compress', 'carousel'], ['compress', 'social'], ['compress', 'photocg'], ['compress', 'exportzip'], ['compress', 'builder'],
   ['exportzip', 'deploy'], ['exportzip', 'qrshare'], ['qrshare', 'social'], ['deploy', 'pwa'], ['pwa', 'favicon'], ['favicon', 'social'], ['favicon', 'loading'], ['loading', 'project'],
   /* viewer & VR */
-  ['viewer', 'assets'], ['viewer', 'pitch'], ['viewer', 'hotspots'], ['viewer', 'zoomhud'], ['viewer', 'loading'], ['viewer', 'autotour'], ['viewer', 'i18n'], ['viewer', 'mini3d'],
-  ['vrpage', 'assets'], ['vrpage', 'pitch'], ['vrpage', 'hotspots'], ['vrpage', 'zoomhud'], ['vrpage', 'viewer'], ['vrpage', 'qrshare'],
-  ['contentmodal', 'hotspots'], ['contentmodal', 'viewer'], ['mini3d', 'glb'], ['mini3d', 'floorplan'],
+  
+  ['vrpage', 'assets'], ['vrpage', 'pitch'], ['vrpage', 'hotspots'], ['vrpage', 'zoomhud'], ['vrpage', 'qrshare'],
+  ['contentmodal', 'hotspots'], ['mini3d', 'glb'], ['mini3d', 'floorplan'],
   /* alat bantu koordinat */
-  ['pitchfinder', 'pitch'], ['pitchfinder', 'hotspots'], ['pitchfinder', 'viewer'], ['denahfinder', 'floorplan'], ['denahfinder', 'builder'], ['pitchfinder', 'builder'],
+  ['pitchfinder', 'pitch'], ['pitchfinder', 'hotspots'], ['denahfinder', 'floorplan'], ['denahfinder', 'builder'], ['pitchfinder', 'builder'],
   /* builder menyentuh semua data */
   ['builder', 'project'], ['builder', 'assets'], ['builder', 'floorplan'], ['builder', 'pitch'], ['builder', 'carousel'], ['builder', 'hotspots'], ['builder', 'glb'], ['builder', 'photocg'],
   ['builder', 'autotour'], ['builder', 'bgm'], ['builder', 'notes'], ['builder', 'exportzip'], ['builder', 'i18n'], ['builder', 'projectid'],
+
+  /* README Kajanchi */
+  ['contentjs', 'builder'], ['contentjs', 'floorplan'], ['contentjs', 'pitch'], ['contentjs', 'hotspots'], ['contentjs', 'assets'], ['contentjs', 'vrpage'], ['contentjs', 'pitchfinder'], ['contentjs', 'denahfinder'], ['contentjs', 'contenttypes'],
+  ['state', 'hotspotsjs'], ['state', 'floorplan'], ['state', 'noteslist'], ['hotspotsjs', 'hotspots'], ['hotspotsjs', 'pitch'], ['hotspotsjs', 'labels'], ['hotspotsjs', 'contentjs'],
+  ['contenttypes', 'hotspots'], ['contenttypes', 'contentmodal'], ['labels', 'hotspots'], ['labels', 'contenttypes'],
+  ['stylecss', 'loading'], ['stylecss', 'zoomhud'], ['stylecss', 'vrpage'], ['stylecss', 'pitchfinder'], ['stylecss', 'denahfinder'],
 ];
 
 export const I18N = {
   ja: {
-    centerMain: 'APIシステム', centerSub: '建築プレゼンテーション統合システム', centerEn: 'Architecture Presentation Integrated System', centerHint: 'クリックしてエディタを開く',
-    hint: 'ドラッグで回転 ・ ホイールでズーム ・ バブルをクリックで詳細', legend: 'データ要素', role: '役割', out: '出力先', link: '連携', stage: '段階',
-    toCenter: 'すべてのデータが APIシステム に集約されます', close: '閉じる', back: '戻る', msgs: ['データバンドルを統合中', '接続を確立中', 'APIシステムを構成中', 'エディタを起動中'],
-    openTitle: 'エディタを起動', mountTitle: 'エディタ接続ポイント', mountText: 'ここにビルダー（エディタ）が接続されます。URL は未設定です。', webgl: 'WebGL2 に対応したブラウザが必要です。', tag: n => `${n}のデータ要素 → 1つのAPIシステム`,
+    centerMain: '360°ビューア', centerSub: 'APIシステム（建築プレゼン統合）', centerEn: 'API System', centerHint: 'クリックしてエディタを開く',
+    hint: 'ドラッグで回転 ・ ホイールでズーム ・ カーソルで接続表示 ・ クリックで詳細', legend: 'システム要素', role: '役割', out: '出力先', link: '連携', stage: '段階',
+    toCenter: 'すべての要素が 360°ビューア を完成させます', close: '閉じる', back: '戻る', msgs: ['データバンドルを統合中', '接続を確立中', 'APIシステムを構成中', 'エディタを起動中'],
+    openTitle: 'エディタを起動', mountTitle: 'エディタ接続ポイント', mountText: 'ここにビルダー（エディタ）が接続されます。URL は未設定です。', webgl: 'WebGL2 に対応したブラウザが必要です。', tag: n => `${n}の要素 → 360°ビューア`,
   },
   en: {
-    centerMain: 'API System', centerSub: 'Architecture Presentation Integrated System', centerEn: '建築プレゼンテーション統合システム', centerHint: 'Click to open the editor',
-    hint: 'Drag to rotate · Scroll to zoom · Click a bubble for details', legend: 'Data elements', role: 'Role', out: 'Outputs to', link: 'Linked with', stage: 'Stage',
-    toCenter: 'Every data element converges into the API System', close: 'Close', back: 'Back', msgs: ['Integrating data bundles', 'Establishing connections', 'Assembling the API System', 'Launching the editor'],
-    openTitle: 'Launching editor', mountTitle: 'Editor mount point', mountText: 'The builder (editor) will be attached here. No URL is set yet.', webgl: 'A WebGL2-capable browser is required.', tag: n => `${n} data elements → 1 API System`,
+    centerMain: '360° Viewer', centerSub: 'API System · Architecture Presentation', centerEn: 'API System', centerHint: 'Click to open the editor',
+    hint: 'Drag to rotate · Scroll to zoom · Hover for connections · Click for details', legend: 'System elements', role: 'Role', out: 'Outputs to', link: 'Linked with', stage: 'Stage',
+    toCenter: 'Every element completes the 360° Viewer', close: 'Close', back: 'Back', msgs: ['Integrating data bundles', 'Establishing connections', 'Assembling the API System', 'Launching the editor'],
+    openTitle: 'Launching editor', mountTitle: 'Editor mount point', mountText: 'The builder (editor) will be attached here. No URL is set yet.', webgl: 'A WebGL2-capable browser is required.', tag: n => `${n} elements → 360° Viewer`,
   },
 };

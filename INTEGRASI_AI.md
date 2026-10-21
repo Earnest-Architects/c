@@ -1,5 +1,7 @@
 # API System — Landing Page (panduan integrasi untuk AI berikutnya)
 
+**Konsep:** bubble pusat = **360 Viewer (API System)**. Semua bubble lain (39) adalah bagian yang melengkapi viewer itu, jadi semuanya terhubung ke pusat.
+
 Frontend statis (tanpa build, tanpa CDN, tanpa library). Digambar dengan Canvas 2D — ringan.
 Bubble datar satu warna (`COLOR` di `main.js`), teks di dalam bubble, tanpa ikon.
 
@@ -8,7 +10,7 @@ Bubble datar satu warna (`COLOR` di `main.js`), teks di dalam bubble, tanpa ikon
 |---|---|
 | `index.html` | Kerangka UI (header, label, legenda, panel info, opening, editor mount) |
 | `styles/landing.css` | Tema (variabel `--acc`, `--acc2`, `--t`) |
-| `src/data.js` | **NODES** (34 bubble: data, backend, tool, runtime), **EDGES** (relasi), **I18N** (JA utama / EN) |
+| `src/data.js` | **NODES** (39 bubble: data, backend, tool, runtime), **EDGES** (relasi), **I18N** (JA utama / EN) |
 | `src/config.js` | **Hook editor** — tempat mengisi URL builder |
 | `src/main.js` | Canvas 2D: tata letak cincin, rotasi 2D, interaksi, opening, bahasa |
 
@@ -27,5 +29,7 @@ Bubble datar satu warna (`COLOR` di `main.js`), teks di dalam bubble, tanpa ikon
 
 ## Perilaku
 - Klik bubble tengah → opening ~3 dtk (zoom, gelombang cincin, grid partikel) → editor/hook.
+- Hover bubble → konektor tumbuh 1 detik: garis relasi (teal) + garis ke pusat (oranye putus-putus, lebih tebal). Garis disembunyikan saat tidak ada hover.
+- Hover pusat → titik cahaya mengalir dari bubble luar lewat garis relasi menuju pusat.
 - Klik bubble kecil → kamera memutar bubble ke kiri + panel keterangan (peran, field output, tautan, tahap).
 - Drag = putar, wheel = zoom, `Esc` = tutup panel/kembali. Bahasa disimpan di `localStorage` (`apisys-lang`).

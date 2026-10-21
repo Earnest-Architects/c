@@ -7,7 +7,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const ease = t => 1 - Math.pow(1 - t, 3);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FONT = '"Hiragino Sans","Yu Gothic UI","Segoe UI Variable","Segoe UI",Meiryo,system-ui,sans-serif';
-const COLOR = '#0fa3a3', COLOR_DARK = '#0b7f7f', TAU = Math.PI * 2;
+const COLOR = '#0fa3a3', COLOR_DARK = '#0b7f7f', LINE_C = '#f0732a', TAU = Math.PI * 2;
 
 let lang = 'ja';
 try { lang = localStorage.getItem('apisys-lang') || 'ja'; } catch (e) { /* ignore */ }
@@ -17,11 +17,11 @@ const L = () => I18N[lang];
 /* ---------------- canvas ---------------- */
 const cv = $('#gl'), ctx = cv.getContext('2d');
 const S = { W: 1, H: 1, dpr: 1, cx: 0, cy: 0, sx: 1, sy: 1, unit: 40, rc: 60, rot: 0, vel: 0, zoom: 1, zoomT: 1, out: 0,
-  sel: null, hover: null, focus: null, editor: false, dirty: true, start: performance.now() };
+  sel: null, hover: null, focus: null, editor: false, dirty: true, start: performance.now(), cH: 0, fx: false };
 
 /* ---------------- data → node ---------------- */
 const N = NODES.length, byId = {};
-const nodes = NODES.map((d, i) => ({ d, i, size: d.size, nbr: [], ang: 0, ring: 0, ux: 0, uy: 0, x: 0, y: 0, R: 20, r: 20, ap: 0, lines: [], fs: 10 }));
+const nodes = NODES.map((d, i) => ({ d, i, size: d.size, nbr: [], ang: 0, ring: 0, ux: 0, uy: 0, x: 0, y: 0, R: 20, r: 20, ap: 0, lines: [], fs: 10, p: 0, hl: 0, parent: null, ph: 0 }));
 nodes.forEach(n => { byId[n.d.id] = n; });
 const edgeList = [], seen = new Set();
 EDGES.forEach(([a, b]) => {
@@ -45,6 +45,14 @@ EDGES.forEach(([a, b]) => {
   }
   nodes.forEach(n => { n.ux = Math.cos(n.ang) * RAD[n.ring]; n.uy = Math.sin(n.ang) * RAD[n.ring]; });
 })();
+
+/* jalur aliran cahaya: tiap bubble menuju bubble relasi di cincin lebih dalam, hingga pusat */
+nodes.forEach(n => {
+  n.ph = (n.i * .6180339) % 1; if (n.ring === 0) return;
+  const c = n.nbr.filter(m => m.ring < n.ring); if (!c.length) return;
+  const mr = Math.max(...c.map(m => m.ring)), d = m => Math.hypot(m.ux - n.ux, m.uy - n.uy);
+  n.parent = c.filter(m => m.ring === mr).sort((a, b) => d(a) - d(b))[0];
+});
 
 /* ---------------- teks di dalam bubble ---------------- */
 const nm = (n, main) => (lang === 'ja' ? (main ? n.d.ja : n.d.en) : (main ? n.d.en : n.d.ja));
@@ -162,47 +170,91 @@ function resize() {
 addEventListener('resize', () => { clearTimeout(resize.t); resize.t = setTimeout(resize, 80); });
 
 /* ---------------- gambar ---------------- */
+const focusNode = () => (S.sel ? byId[S.sel] : (S.hover && S.hover !== 'center' ? S.hover : null));
+const e3 = p => (p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);          /* ease in-out halus */
 function place(now) {
-  const c = Math.cos(S.rot), s = Math.sin(S.rot), z = S.zoom * (1 + S.out * 1.2), el = (now - S.start) / 1000;
-  const fo = S.sel ? byId[S.sel] : (S.hover && S.hover !== 'center' ? S.hover : null);
+  const c = Math.cos(S.rot), s = Math.sin(S.rot), z = S.zoom * (1 + S.out * 1.2), el = (now - S.start) / 1000, fo = focusNode();
   nodes.forEach(n => {
-    n.ap = reduce ? 1 : ease(clamp((el - .15 - n.i * .03) / .5, 0, 1));
+    n.ap = reduce ? 1 : ease(clamp((el - .15 - n.i * .025) / .5, 0, 1));
     n.x = S.cx + (n.ux * c - n.uy * s) * S.sx * z; n.y = S.cy + (n.ux * s + n.uy * c) * S.sy * z;
     n.r = n.R * n.ap * (n === fo ? 1.1 : 1);
   });
-  return fo;
+}
+/* progres konektor: 1 detik muncul, ±0.45 detik menghilang; aliran cahaya saat pusat di-hover */
+function stepFx(dt) {
+  const fo = focusNode(); let changing = false;
+  nodes.forEach(n => {
+    const t = n === fo ? 1 : 0;
+    if (reduce) { n.p = t; return; }
+    if (n.p < t) { n.p = Math.min(1, n.p + dt / 1.0); changing = true; } else if (n.p > t) { n.p = Math.max(0, n.p - dt / .45); changing = true; }
+  });
+  const ct = S.hover === 'center' && !S.sel && !S.editor && !O.on ? 1 : 0;
+  if (reduce) S.cH = ct; else if (S.cH < ct) { S.cH = Math.min(1, S.cH + dt / .9); } else if (S.cH > ct) { S.cH = Math.max(0, S.cH - dt / .6); }
+  S.fx = changing || (S.cH > 0 && !reduce) || (S.cH > 0 && S.cH < 1);
+}
+const seg = (a, b, p) => { ctx.moveTo(a.x, a.y); ctx.lineTo(a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p); };
+const CEN = { x: 0, y: 0 };
+function glow(x, y, a) {
+  ctx.globalAlpha = a * .16; ctx.fillStyle = '#f0732a'; ctx.beginPath(); ctx.arc(x, y, 11, 0, TAU); ctx.fill();
+  ctx.globalAlpha = a * .4; ctx.beginPath(); ctx.arc(x, y, 6.5, 0, TAU); ctx.fill();
+  ctx.globalAlpha = a; ctx.fillStyle = '#ffb347'; ctx.beginPath(); ctx.arc(x, y, 3.2, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.globalAlpha = a * .9; ctx.beginPath(); ctx.arc(x, y, 1.4, 0, TAU); ctx.fill();
 }
 function draw(now) {
-  const fo = place(now), fade = 1 - S.out * .9, t = L(), cap = ease(clamp((now - S.start) / 1000 / .5, 0, 1)), rc = S.rc * (reduce ? 1 : cap);
-  ctx.clearRect(0, 0, S.W, S.H); ctx.globalAlpha = fade; ctx.lineCap = 'round';
-  /* garis ke pusat (sangat tipis) */
-  ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(15,163,163,.07)'; ctx.beginPath();
-  nodes.forEach(n => { if (n !== fo) { ctx.moveTo(S.cx, S.cy); ctx.lineTo(n.x, n.y); } }); ctx.stroke();
-  /* garis relasi */
-  ctx.strokeStyle = fo ? 'rgba(15,163,163,.10)' : 'rgba(15,163,163,.30)'; ctx.beginPath();
-  edgeList.forEach(([a, b]) => { if (fo && (a === fo || b === fo)) return; ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); }); ctx.stroke();
-  if (fo) {
-    ctx.strokeStyle = 'rgba(15,163,163,.9)'; ctx.lineWidth = 2; ctx.beginPath();
-    fo.nbr.forEach(m => { ctx.moveTo(fo.x, fo.y); ctx.lineTo(m.x, m.y); }); ctx.stroke();
-    ctx.strokeStyle = 'rgba(15,163,163,.4)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(S.cx, S.cy); ctx.lineTo(fo.x, fo.y); ctx.stroke();
+  place(now); CEN.x = S.cx; CEN.y = S.cy;
+  const fade = 1 - S.out * .9, t = L(), cap = ease(clamp((now - S.start) / 1000 / .5, 0, 1)), rc = S.rc * (reduce ? 1 : cap), ch = e3(S.cH);
+  ctx.clearRect(0, 0, S.W, S.H); ctx.lineCap = 'round'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  /* pengaruh fokus → redupkan bubble lain */
+  let dim = 0; nodes.forEach(n => { n.hl = 0; dim = Math.max(dim, e3(n.p)); });
+  nodes.forEach(f => { if (f.p > 0) { const v = e3(f.p); f.hl = Math.max(f.hl, v); f.nbr.forEach(m => { m.hl = Math.max(m.hl, v); }); } });
+
+  /* (A) pohon aliran menuju pusat — muncul saat pusat di-hover */
+  if (ch > .001) {
+    ctx.globalAlpha = fade * ch * .5; ctx.lineWidth = 1.6; ctx.strokeStyle = COLOR; ctx.beginPath();
+    nodes.forEach(n => { if (n.parent) seg(n, n.parent, 1); }); ctx.stroke();
+    ctx.strokeStyle = LINE_C; ctx.lineWidth = 2; ctx.setLineDash([7, 6]); ctx.beginPath();
+    nodes.forEach(n => { if (!n.parent) seg(n, CEN, 1); }); ctx.stroke(); ctx.setLineDash([]);
   }
+  /* (B) konektor bubble yang di-hover/dipilih: relasi (teal) + garis ke pusat (oranye putus-putus, lebih tebal) */
+  nodes.forEach(n => {
+    if (n.p <= .001) return; const e = e3(n.p);
+    ctx.globalAlpha = fade * clamp(n.p * 4, 0, 1); ctx.strokeStyle = 'rgba(15,163,163,.9)'; ctx.lineWidth = 2; ctx.beginPath();
+    n.nbr.forEach(m => seg(n, m, e)); ctx.stroke();
+    ctx.strokeStyle = LINE_C; ctx.lineWidth = 3; ctx.setLineDash([9, 6]); ctx.beginPath(); seg(n, CEN, e); ctx.stroke(); ctx.setLineDash([]);
+  });
+
   /* bubble pusat */
   ctx.globalAlpha = fade * cap; ctx.fillStyle = COLOR; ctx.beginPath(); ctx.arc(S.cx, S.cy, rc, 0, TAU); ctx.fill();
-  ctx.strokeStyle = 'rgba(15,163,163,.35)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(S.cx, S.cy, rc + 7, 0, TAU); ctx.stroke();
-  ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.strokeStyle = 'rgba(15,163,163,.35)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(S.cx, S.cy, rc + 7 + ch * 5, 0, TAU); ctx.stroke();
+  ctx.fillStyle = '#fff';
   let fs = Math.round(rc * .3); do { ctx.font = `700 ${fs}px ${FONT}`; fs--; } while (ctx.measureText(t.centerMain).width > rc * 1.7 && fs > 10);
   ctx.fillText(t.centerMain, S.cx, S.cy - rc * .3);
   const sfs = Math.max(8, Math.round(rc * .115)); ctx.font = `500 ${sfs}px ${FONT}`; ctx.globalAlpha = fade * cap * .9;
   wrap(t.centerSub, rc * 1.5, /[^\x00-\x7f]/.test(t.centerSub)).slice(0, 4).forEach((l, k) => ctx.fillText(l, S.cx, S.cy + rc * .12 + k * sfs * 1.25));
-  ctx.globalAlpha = fade * cap; ctx.fillStyle = '#5b6b7a'; ctx.font = `500 11px ${FONT}`; ctx.fillText(t.centerHint, S.cx, S.cy + rc + 22);
+  ctx.globalAlpha = fade * cap; ctx.fillStyle = '#5b6b7a'; ctx.font = `500 11px ${FONT}`; ctx.fillText(t.centerHint, S.cx, S.cy + rc + 24);
+
   /* bubble */
   nodes.forEach(n => {
-    if (n.ap <= 0.01) return; const inv = !fo || n === fo || fo.nbr.includes(n);
-    ctx.globalAlpha = fade * clamp(n.ap * 1.5, 0, 1) * (inv ? 1 : .3); ctx.fillStyle = n === fo ? COLOR_DARK : COLOR;
+    if (n.ap <= 0.01) return;
+    ctx.globalAlpha = fade * clamp(n.ap * 1.5, 0, 1) * (1 - .7 * dim * (1 - n.hl)); ctx.fillStyle = n === focusNode() ? COLOR_DARK : COLOR;
     ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, TAU); ctx.fill();
     if (n.ap < .6) return; ctx.fillStyle = '#fff'; ctx.font = `600 ${n.fs}px ${FONT}`; const lh = n.fs * 1.2, y0 = n.y - (n.lines.length - 1) * lh / 2;
     n.lines.forEach((l, k) => ctx.fillText(l, n.x, y0 + k * lh));
   });
+
+  /* (C) titik cahaya: bergerak dari bubble terluar, lewat garis relasi antar bubble, menuju pusat */
+  if (ch > .001 && !reduce) {
+    const tt = now / 1000, V = Math.max(170, S.W * .15);
+    nodes.forEach(n => {
+      const pts = [n]; for (let m = n.parent; m; m = m.parent) pts.push(m);
+      { const q = pts[pts.length - 1], dx = S.cx - q.x, dy = S.cy - q.y, dd = Math.hypot(dx, dy) || 1, k2 = Math.max(0, (dd - rc) / dd); pts.push({ x: q.x + dx * k2, y: q.y + dy * k2 }); }   /* berhenti di tepi bubble pusat */
+      let total = 0; const L2 = []; for (let k = 1; k < pts.length; k++) { const l = Math.hypot(pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y); L2.push(l); total += l; }
+      const cyc = total * 1.35, d = (tt * V + n.ph * cyc) % cyc; if (d > total) return;
+      let k = 0, acc = 0; while (k < L2.length - 1 && acc + L2[k] < d) { acc += L2[k]; k++; }
+      const f = L2[k] ? (d - acc) / L2[k] : 0, u = d / total, a = Math.min(1, u / .08) * Math.min(1, (1 - u) / .1);
+      glow(pts[k].x + (pts[k + 1].x - pts[k].x) * f, pts[k].y + (pts[k + 1].y - pts[k].y) * f, ch * a * fade);
+    });
+  }
   ctx.globalAlpha = 1;
 }
 
@@ -212,12 +264,13 @@ function frame(now) {
   requestAnimationFrame(frame); if (document.hidden) { last = now; return; }
   const el = (now - S.start) / 1000, intro = !reduce && el < 2.8;
   if (!uiShown && el > 1.2) { uiShown = true; document.body.classList.remove('loading'); }
-  const auto = !reduce && !S.sel && !S.hover && !S.editor && !O.on && !P.down && S.focus === null;
-  const moving = P.down || S.focus !== null || O.on || intro || Math.abs(S.vel) > 1e-3 || Math.abs(S.zoomT - S.zoom) > 1e-3 || S.out > .002;
+  const auto = false;                                       /* putaran otomatis dimatikan */
+  const moving = S.fx || P.down || S.focus !== null || O.on || intro || Math.abs(S.vel) > 1e-3 || Math.abs(S.zoomT - S.zoom) > 1e-3 || S.out > .002;
   if (!auto && !moving && !S.dirty) { last = now; return; }
   if (auto && !moving && now - last < 33) return;          /* putaran santai dibatasi ±30 fps */
   const dt = Math.min(.05, (now - last) / 1000); last = now; S.dirty = false;
   if (O.on) updateOpening(now); else if (!S.editor && S.out > 0) { S.out *= Math.exp(-dt * 3); if (S.out < .002) S.out = 0; }
+  stepFx(dt);
   S.zoom += (S.zoomT - S.zoom) * (1 - Math.exp(-dt * 8)); if (Math.abs(S.zoomT - S.zoom) < 1e-3) S.zoom = S.zoomT;
   if (!P.down) {
     if (S.focus !== null) { const d = S.focus - S.rot; S.rot += d * (1 - Math.exp(-dt * 5)); if (Math.abs(d) < .002) { S.rot = S.focus; S.focus = null; } }
@@ -227,5 +280,5 @@ function frame(now) {
 }
 
 /* expose untuk integrasi AI berikutnya: [[API_SYSTEM:PUBLIC_API]] */
-window.APISystem = Object.assign(window.APISystem || {}, { openEditor, closeEditor, select, deselect, setLang, nodes: NODES, edges: EDGES, onEditorOpen: (window.APISystem && window.APISystem.onEditorOpen) || null });
+window.APISystem = Object.assign(window.APISystem || {}, { openEditor, closeEditor, select, deselect, setLang, nodes: NODES, edges: EDGES, positions: () => nodes.map(n => ({ id: n.d.id, x: n.x, y: n.y, r: n.r })), onEditorOpen: (window.APISystem && window.APISystem.onEditorOpen) || null });
 resize(); requestAnimationFrame(frame);
